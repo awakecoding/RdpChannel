@@ -124,8 +124,17 @@ int rdp_svc_server_register_session_notification()
 int main(int argc, char** argv)
 {
 	BOOL bSuccess;
+	BOOL blocking;
+	HANDLE hEvent;
 	HANDLE hServer;
 	HANDLE hChannel;
+	DWORD waitStatus;
+	BYTE fillValue = 0;
+	BYTE* pBuffer = NULL;
+	DWORD bytesReturned = 0;
+
+	hEvent = NULL;
+	blocking = FALSE;
 
 	hServer = WTS_CURRENT_SERVER_HANDLE;
 
@@ -150,12 +159,28 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
+	if (!blocking)
+	{
+		if (!WTSVirtualChannelQuery(hChannel, WTSVirtualEventHandle, (PVOID*) &pBuffer, &bytesReturned) ||
+				(bytesReturned != sizeof(HANDLE)))
+		{
+			fprintf(stderr, "WTSVirtualChannelQuery failed (GetLastError() = %d)\n", GetLastError());
+			return 0;
+		}
+
+		CopyMemory(&hEvent, pBuffer, sizeof(HANDLE));
+		WTSFreeMemory(pBuffer);
+	}
+
 	while (1)
 	{
 		BOOL bSuccess;
 		BYTE rgbBuffer[1024];
 		ULONG ulBytesWritten;
 		ULONG ulBytesRead;
+
+		FillMemory(rgbBuffer, sizeof(rgbBuffer), fillValue);
+		fillValue = (fillValue + 1) % 0xFF;
 
 		bSuccess = WTSVirtualChannelWrite(hChannel, (PCHAR) rgbBuffer, sizeof(rgbBuffer), &ulBytesWritten);
 
@@ -167,6 +192,17 @@ int main(int argc, char** argv)
 
 		fprintf(stderr, "WTSVirtualChannelWrite - %u bytes written\n", ulBytesWritten);
 
+		if (!blocking)
+		{
+			while (1)
+			{
+				waitStatus = WaitForSingleObject(hEvent, 250);
+
+				if (waitStatus != WAIT_TIMEOUT)
+					break;
+			}
+		}
+
 		bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) rgbBuffer, sizeof(rgbBuffer), &ulBytesRead);
 
 		if (!bSuccess)
@@ -176,6 +212,8 @@ int main(int argc, char** argv)
 		}
 
 		fprintf(stderr, "WTSVirtualChannelRead - %u bytes read\n", ulBytesRead);
+
+		Sleep(1000);
 	}
 
 	WTSVirtualChannelClose(hChannel);

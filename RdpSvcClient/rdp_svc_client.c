@@ -67,7 +67,7 @@ int rdp_svc_send(rdpSvcAddin* svc, wStream* s)
 		return CHANNEL_RC_BAD_INIT_HANDLE;
 
 	status = svc->channelEntryPoints.pVirtualChannelWrite(svc->OpenHandle,
-			Stream_Buffer(s), Stream_GetPosition(s), s);
+			Stream_Buffer(s), Stream_Length(s), s);
 
 	if (status != CHANNEL_RC_OK)
 	{
@@ -162,6 +162,15 @@ static void rdp_svc_virtual_channel_open_event(UINT32 openHandle, UINT32 event,
 
 int rdp_svc_process_receive(rdpSvcAddin* svc, wStream* s)
 {
+	wStream* output;
+
+	output = Stream_New(NULL, Stream_Length(s));
+	Stream_Write(output, Stream_Buffer(s), Stream_Length(s));
+	Stream_SealLength(output);
+	Stream_SetPosition(output, 0);
+
+	rdp_svc_send(svc, output);
+
 	return 0;
 }
 
@@ -216,6 +225,11 @@ static void rdp_svc_virtual_channel_event_connected(rdpSvcAddin* svc, void* pDat
 			(LPTHREAD_START_ROUTINE) rdp_svc_virtual_channel_client_thread, (void*) svc, 0, NULL);
 }
 
+static void rdp_svc_virtual_channel_event_disconnected(rdpSvcAddin* svc)
+{
+	WLog_Print(g_Log, WLOG_DEBUG, "RdpSvcVirtualChannelEventDisconnected");
+}
+
 static void rdp_svc_virtual_channel_event_terminated(rdpSvcAddin* svc)
 {
 	WLog_Print(g_Log, WLOG_DEBUG, "RdpSvcVirtualChannelEventTerminated");
@@ -258,6 +272,7 @@ static void rdp_svc_virtual_channel_init_event(void* pInitHandle, UINT32 event, 
 
 		case CHANNEL_EVENT_DISCONNECTED:
 			fprintf(stderr, "svc channel client: CHANNEL_EVENT_DISCONNECTED\n");
+			rdp_svc_virtual_channel_event_disconnected(svc);
 			break;
 
 		case CHANNEL_EVENT_TERMINATED:
