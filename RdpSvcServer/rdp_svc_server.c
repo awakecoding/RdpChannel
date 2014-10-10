@@ -108,11 +108,15 @@ int rdp_svc_server_register_session_notification()
 		return -1;
 	}
 
+	ZeroMemory(&msg, sizeof(msg));
+
+#ifdef _WIN32
 	while (GetMessage(&msg, NULL, 0, 0) > 0)
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+#endif
 
 	return 0;
 }
@@ -127,14 +131,16 @@ int main(int argc, char** argv)
 
 	g_Log = WLog_Get("rdp.svc.server");
 
+#ifdef _WIN32
 	WLog_SetLogAppenderType(g_Log, WLOG_APPENDER_FILE);
 	WLog_OpenAppender(g_Log);
+#endif
 
 	WLog_SetLogLevel(g_Log, WLOG_DEBUG);
 
 	WLog_Print(g_Log, WLOG_DEBUG, "RdpSvc Channel Server Open");
 
-	rdp_svc_server_register_session_notification();
+	//rdp_svc_server_register_session_notification();
 
 	hChannel = WTSVirtualChannelOpen(hServer, WTS_CURRENT_SESSION, "RdpSvc");
 
@@ -161,23 +167,15 @@ int main(int argc, char** argv)
 
 		fprintf(stderr, "WTSVirtualChannelWrite - %u bytes written\n", ulBytesWritten);
 
-		bSuccess = WTSVirtualChannelRead(hChannel, 500, (PCHAR) rgbBuffer, sizeof(rgbBuffer), &ulBytesRead);
+		bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) rgbBuffer, sizeof(rgbBuffer), &ulBytesRead);
 
 		if (!bSuccess)
 		{
 			fprintf(stderr, "WTSVirtualChannelRead failed (GetLastError() = %d)\n", GetLastError());
-			//break;
+			break;
 		}
 
-		printf("WTSVirtualChannelRead - %u bytes read\n", ulBytesRead);
-	}
-
-	fprintf(stderr, "Logging off...\n");
-	bSuccess = WTSLogoffSession(hServer, WTS_CURRENT_SESSION, FALSE);
-
-	if (!bSuccess)
-	{
-		fprintf(stderr, "WTSLogoffSession failure\n");
+		fprintf(stderr, "WTSVirtualChannelRead - %u bytes read\n", ulBytesRead);
 	}
 
 	WTSVirtualChannelClose(hChannel);

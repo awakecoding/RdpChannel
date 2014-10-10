@@ -83,7 +83,8 @@ static void rdp_svc_virtual_channel_event_data_received(rdpSvcAddin* svc,
 {
 	wStream* s;
 
-	WLog_Print(g_Log, WLOG_DEBUG, "RdpSvcVirtualChannelEventDataReceived");
+	WLog_Print(g_Log, WLOG_DEBUG, "RdpSvcVirtualChannelEventDataReceived: dataLength: %d totalLength: %d",
+			dataLength, totalLength);
 
 	if ((dataFlags & CHANNEL_FLAG_SUSPEND) || (dataFlags & CHANNEL_FLAG_RESUME))
 	{
@@ -117,6 +118,18 @@ static void rdp_svc_virtual_channel_event_data_received(rdpSvcAddin* svc,
 	}
 }
 
+static void rdp_svc_virtual_channel_event_write_complete(rdpSvcAddin* svc,
+		void* pData, UINT32 dataLength, UINT32 totalLength, UINT32 dataFlags)
+{
+	wStream* s;
+
+	s = (wStream*) pData;
+
+	WLog_Print(g_Log, WLOG_DEBUG, "RdpSvcVirtualChannelEventWriteComplete");
+
+	Stream_Free((wStream*) pData, TRUE);
+}
+
 static void rdp_svc_virtual_channel_open_event(UINT32 openHandle, UINT32 event,
 		void* pData, UINT32 dataLength, UINT32 totalLength, UINT32 dataFlags)
 {
@@ -139,7 +152,7 @@ static void rdp_svc_virtual_channel_open_event(UINT32 openHandle, UINT32 event,
 			break;
 
 		case CHANNEL_EVENT_WRITE_COMPLETE:
-			Stream_Free((wStream*) pData, TRUE);
+			rdp_svc_virtual_channel_event_write_complete(svc, pData, dataLength, totalLength, dataFlags);
 			break;
 
 		case CHANNEL_EVENT_USER:
@@ -213,13 +226,10 @@ static void rdp_svc_virtual_channel_event_terminated(rdpSvcAddin* svc)
 	MessagePipe_Free(svc->MsgPipe);
 	CloseHandle(svc->thread);
 
-	svc->channelEntryPoints.pVirtualChannelClose(svc->OpenHandle);
-
 	if (svc->input)
-	{
 		Stream_Free(svc->input, TRUE);
-		svc->input = NULL;
-	}
+
+	svc->channelEntryPoints.pVirtualChannelClose(svc->OpenHandle);
 
 	rdp_svc_remove_open_handle_data(svc->OpenHandle);
 	rdp_svc_remove_init_handle_data(svc->InitHandle);
@@ -279,7 +289,7 @@ int VirtualChannelEntry(PCHANNEL_ENTRY_POINTS pEntryPoints)
 
 	strcpy(svc->channelDef.name, "RdpSvc");
 
-	CopyMemory(&(svc->channelEntryPoints), pEntryPoints, pEntryPoints->cbSize);
+	CopyMemory(&(svc->channelEntryPoints), pEntryPoints, sizeof(svc->channelEntryPoints));
 
 	svc->channelEntryPoints.pVirtualChannelInit(&svc->InitHandle,
 		&svc->channelDef, 1, VIRTUAL_CHANNEL_VERSION_WIN2000, rdp_svc_virtual_channel_init_event);
@@ -288,8 +298,10 @@ int VirtualChannelEntry(PCHANNEL_ENTRY_POINTS pEntryPoints)
 
 	g_Log = WLog_Get("rdp.svc.client");
 
+#ifdef _WIN32
 	WLog_SetLogAppenderType(g_Log, WLOG_APPENDER_FILE);
 	WLog_OpenAppender(g_Log);
+#endif
 
 	WLog_SetLogLevel(g_Log, WLOG_DEBUG);
 
