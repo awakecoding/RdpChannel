@@ -11,6 +11,10 @@ set(${MODULE_PREFIX}_SRCS
 	rdp_dvc_client.c
 	rdp_dvc_client.h)
 
+if(MSVC)
+	list(APPEND ${MODULE_PREFIX}_SRCS module.def)
+endif()
+
 add_library(${MODULE_NAME} SHARED ${${MODULE_PREFIX}_SRCS})
 
 set_target_properties(${MODULE_NAME} PROPERTIES PREFIX "")

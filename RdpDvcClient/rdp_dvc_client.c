@@ -85,7 +85,7 @@ int rdp_dvc_terminated(IWTSPlugin* pPlugin)
 	return 0;
 }
 
-DECLSPEC_EXPORT int DVCPluginEntry(IDRDYNVC_ENTRY_POINTS* pEntryPoints)
+int DVCPluginEntry(IDRDYNVC_ENTRY_POINTS* pEntryPoints)
 {
 	int status = 0;
 	rdpDvcAddin* dvc;

@@ -192,12 +192,12 @@ IClassFactory WinPR_IClassFactory =
  * Exported COM Functions
  */
 
-DECLSPEC_EXPORT HRESULT WINAPI DllCanUnloadNow(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
 	return S_OK;
 }
 
-DECLSPEC_EXPORT HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
 	HRESULT hr;
 
@@ -211,12 +211,12 @@ DECLSPEC_EXPORT HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, L
 	return hr;
 }
 
-DECLSPEC_EXPORT HRESULT WINAPI DllRegisterServer(void)
+HRESULT WINAPI DllRegisterServer(void)
 {
 	return S_OK;
 }
 
-DECLSPEC_EXPORT HRESULT WINAPI DllUnregisterServer(void)
+HRESULT WINAPI DllUnregisterServer(void)
 {
 	return S_OK;
 }
