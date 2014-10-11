@@ -220,3 +220,23 @@ HRESULT WINAPI DllUnregisterServer(void)
 {
 	return S_OK;
 }
+
+/**
+ * VirtualChannelGetInstance Entry Point
+ * http://msdn.microsoft.com/en-us/library/jj662753/
+ */
+
+DECLSPEC_EXPORT HRESULT VCAPITYPE VirtualChannelGetInstance(REFIID refiid, ULONG* pNumObjs, VOID** ppObjArray)
+{
+	if (!IsEqualCLSID(refiid, &IID_IWTSPlugin))
+		return CLASS_E_CLASSNOTAVAILABLE;
+
+	*pNumObjs = 1;
+
+	if (!ppObjArray)
+		return S_OK;
+
+	*((ULONG_PTR*) ppObjArray) = (ULONG_PTR) &WinPR_IWTSPlugin;
+
+	return S_OK;
+}

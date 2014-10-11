@@ -4,6 +4,7 @@
 
 #include <winpr/crt.h>
 #include <winpr/spec.h>
+#include <winpr/wtsapi.h>
 #include <winpr/windows.h>
 
 #ifdef _WIN32
