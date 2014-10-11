@@ -85,247 +85,212 @@ typedef LONG DISPID;
 typedef DISPID MEMBERID;
 
 typedef struct tagSAFEARRAYBOUND
-    {
-    ULONG cElements;
-    LONG lLbound;
-    } 	SAFEARRAYBOUND;
+{
+	ULONG cElements;
+	LONG lLbound;
+} 	SAFEARRAYBOUND;
 
 typedef struct tagSAFEARRAY
-    {
-    USHORT cDims;
-    USHORT fFeatures;
-    ULONG cbElements;
-    ULONG cLocks;
-    PVOID pvData;
-    SAFEARRAYBOUND rgsabound[ 1 ];
-    } 	SAFEARRAY;
+{
+	USHORT cDims;
+	USHORT fFeatures;
+	ULONG cbElements;
+	ULONG cLocks;
+	PVOID pvData;
+	SAFEARRAYBOUND rgsabound[1];
+} SAFEARRAY;
 
 typedef struct tagEXCEPINFO
 {
-    WORD  wCode;
-    WORD  wReserved;
-    BSTR  bstrSource;
-    BSTR  bstrDescription;
-    BSTR  bstrHelpFile;
-    DWORD dwHelpContext;
-    PVOID pvReserved;
-    HRESULT (WINAPI *pfnDeferredFillIn)(struct tagEXCEPINFO *);
-    SCODE scode;
-} EXCEPINFO, * LPEXCEPINFO;
-
-#define __tagVARIANT
-#define __VARIANT_NAME_1
-#define __VARIANT_NAME_2
-#define __VARIANT_NAME_3
-#define __tagBRECORD
-#define __VARIANT_NAME_4
+	WORD  wCode;
+	WORD  wReserved;
+	BSTR  bstrSource;
+	BSTR  bstrDescription;
+	BSTR  bstrHelpFile;
+	DWORD dwHelpContext;
+	PVOID pvReserved;
+	HRESULT (WINAPI *pfnDeferredFillIn)(struct tagEXCEPINFO*);
+	SCODE scode;
+} EXCEPINFO, *LPEXCEPINFO;
 
 typedef struct tagVARIANT VARIANT;
 
 struct tagVARIANT
 {
-    union 
-        {
-        struct __tagVARIANT
-            {
-            VARTYPE vt;
-            WORD wReserved1;
-            WORD wReserved2;
-            WORD wReserved3;
-            union 
-                {
-                LONGLONG llVal;
-                LONG lVal;
-                BYTE bVal;
-                SHORT iVal;
-                FLOAT fltVal;
-                DOUBLE dblVal;
-                VARIANT_BOOL boolVal;
-                _VARIANT_BOOL bool;
-                SCODE scode;
-                CY cyVal;
-                DATE date;
-                BSTR bstrVal;
-                IUnknown *punkVal;
-                IDispatch *pdispVal;
-                SAFEARRAY *parray;
-                BYTE *pbVal;
-                SHORT *piVal;
-                LONG *plVal;
-                LONGLONG *pllVal;
-                FLOAT *pfltVal;
-                DOUBLE *pdblVal;
-                VARIANT_BOOL *pboolVal;
-                _VARIANT_BOOL *pbool;
-                SCODE *pscode;
-                CY *pcyVal;
-                DATE *pdate;
-                BSTR *pbstrVal;
-                IUnknown **ppunkVal;
-                IDispatch **ppdispVal;
-                SAFEARRAY **pparray;
-                VARIANT *pvarVal;
-                PVOID byref;
-                CHAR cVal;
-                USHORT uiVal;
-                ULONG ulVal;
-                ULONGLONG ullVal;
-                INT intVal;
-                UINT uintVal;
-                DECIMAL *pdecVal;
-                CHAR *pcVal;
-                USHORT *puiVal;
-                ULONG *pulVal;
-                ULONGLONG *pullVal;
-                INT *pintVal;
-                UINT *puintVal;
-                struct __tagBRECORD
-                    {
-                    PVOID pvRecord;
-                    IRecordInfo *pRecInfo;
-                    } 	__VARIANT_NAME_4;
-                } 	__VARIANT_NAME_3;
-            } 	__VARIANT_NAME_2;
-        DECIMAL decVal;
-        } 	__VARIANT_NAME_1;
-    };
+	union
+	{
+		struct
+		{
+			VARTYPE vt;
+			WORD wReserved1;
+			WORD wReserved2;
+			WORD wReserved3;
+			union
+			{
+				LONGLONG llVal;
+				LONG lVal;
+				BYTE bVal;
+				SHORT iVal;
+				FLOAT fltVal;
+				DOUBLE dblVal;
+				VARIANT_BOOL boolVal;
+				_VARIANT_BOOL bool;
+				SCODE scode;
+				CY cyVal;
+				DATE date;
+				BSTR bstrVal;
+				IUnknown *punkVal;
+				IDispatch *pdispVal;
+				SAFEARRAY *parray;
+				BYTE *pbVal;
+				SHORT *piVal;
+				LONG *plVal;
+				LONGLONG *pllVal;
+				FLOAT *pfltVal;
+				DOUBLE *pdblVal;
+				VARIANT_BOOL *pboolVal;
+				_VARIANT_BOOL *pbool;
+				SCODE *pscode;
+				CY *pcyVal;
+				DATE *pdate;
+				BSTR *pbstrVal;
+				IUnknown **ppunkVal;
+				IDispatch **ppdispVal;
+				SAFEARRAY **pparray;
+				VARIANT *pvarVal;
+				PVOID byref;
+				CHAR cVal;
+				USHORT uiVal;
+				ULONG ulVal;
+				ULONGLONG ullVal;
+				INT intVal;
+				UINT uintVal;
+				DECIMAL *pdecVal;
+				CHAR *pcVal;
+				USHORT *puiVal;
+				ULONG *pulVal;
+				ULONGLONG *pullVal;
+				INT *pintVal;
+				UINT *puintVal;
+				struct
+				{
+					PVOID pvRecord;
+					IRecordInfo *pRecInfo;
+				};
+			};
+		};
+		DECIMAL decVal;
+	};
+};
 
 typedef VARIANT *LPVARIANT;
 typedef VARIANT VARIANTARG;
 typedef VARIANT *LPVARIANTARG;
 
 typedef struct tagDISPPARAMS
-    {
-    VARIANTARG *rgvarg;
-    DISPID *rgdispidNamedArgs;
-    UINT cArgs;
-    UINT cNamedArgs;
-    } 	DISPPARAMS;
+{
+	VARIANTARG *rgvarg;
+	DISPID *rgdispidNamedArgs;
+	UINT cArgs;
+	UINT cNamedArgs;
+} 	DISPPARAMS;
 
-    struct _IUnknownVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            IUnknown * This,
-            /* [in] */ REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            IUnknown * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            IUnknown * This);
-    };
+/**
+ * IUnknown
+ */
 
-    struct _IUnknown
-    {
-        IUnknownVtbl *lpVtbl;
-    };
+struct _IUnknownVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IUnknown* This, REFIID riid, void** ppvObject);
 
-    struct _IDispatchVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IDispatch * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IDispatch * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IDispatch * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *GetTypeInfoCount )( 
-            __RPC__in IDispatch * This,
-            /* [out] */ __RPC__out UINT *pctinfo);
-        
-        HRESULT ( STDMETHODCALLTYPE *GetTypeInfo )( 
-            __RPC__in IDispatch * This,
-            /* [in] */ UINT iTInfo,
-            /* [in] */ LCID lcid,
-            /* [out] */ __RPC__deref_out_opt ITypeInfo **ppTInfo);
-        
-        HRESULT ( STDMETHODCALLTYPE *GetIDsOfNames )( 
-            __RPC__in IDispatch * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [size_is][in] */ __RPC__in_ecount_full(cNames) LPOLESTR *rgszNames,
-            /* [range][in] */ __RPC__in_range(0,16384) UINT cNames,
-            /* [in] */ LCID lcid,
-            /* [size_is][out] */ __RPC__out_ecount_full(cNames) DISPID *rgDispId);
-        
-        /* [local] */ HRESULT ( STDMETHODCALLTYPE *Invoke )( 
-            IDispatch * This,
-            /* [in] */ DISPID dispIdMember,
-            /* [in] */ REFIID riid,
-            /* [in] */ LCID lcid,
-            /* [in] */ WORD wFlags,
-            /* [out][in] */ DISPPARAMS *pDispParams,
-            /* [out] */ VARIANT *pVarResult,
-            /* [out] */ EXCEPINFO *pExcepInfo,
-            /* [out] */ UINT *puArgErr);
-    };
+	ULONG (WINAPI * AddRef)(IUnknown* This);
 
-    struct _IDispatch
-    {
-        IDispatchVtbl *lpVtbl;
-    };
+	ULONG (WINAPI * Release)(IUnknown* This);
+};
 
-    struct _IErrorLogVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IErrorLog * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IErrorLog * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IErrorLog * This);
-        
-        HRESULT ( STDMETHODCALLTYPE *AddError )( 
-            __RPC__in IErrorLog * This,
-            /* [in] */ __RPC__in LPCOLESTR pszPropName,
-            /* [in] */ __RPC__in EXCEPINFO *pExcepInfo);
-    };
+struct _IUnknown
+{
+	IUnknownVtbl* lpVtbl;
+};
 
-    struct _IErrorLog
-    {
-        IErrorLogVtbl *lpVtbl;
-    };
+/**
+ * IDispatch
+ */
 
-    struct _IPropertyBagVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IPropertyBag * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IPropertyBag * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IPropertyBag * This);
-        
-        /* [local] */ HRESULT ( STDMETHODCALLTYPE *Read )( 
-            IPropertyBag * This,
-            /* [in] */ LPCOLESTR pszPropName,
-            /* [out][in] */ VARIANT *pVar,
-            /* [unique][in] */ IErrorLog *pErrorLog);
-        
-        HRESULT ( STDMETHODCALLTYPE *Write )( 
-            __RPC__in IPropertyBag * This,
-            /* [in] */ __RPC__in LPCOLESTR pszPropName,
-            /* [in] */ __RPC__in VARIANT *pVar);
-    };
+struct _IDispatchVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IDispatch* This, REFIID riid, void** ppvObject);
 
-    struct _IPropertyBag
-    {
-        IPropertyBagVtbl *lpVtbl;
-    };
+	ULONG (WINAPI * AddRef)(IDispatch* This);
+
+	ULONG (WINAPI * Release)(IDispatch* This);
+
+	HRESULT (WINAPI * GetTypeInfoCount)(IDispatch* This, UINT *pctinfo);
+
+	HRESULT (WINAPI * GetTypeInfo)(IDispatch* This,
+			UINT iTInfo, LCID lcid, ITypeInfo **ppTInfo);
+
+	HRESULT (WINAPI * GetIDsOfNames)(IDispatch* This,
+			REFIID riid, LPOLESTR *rgszNames,
+			UINT cNames, LCID lcid, DISPID *rgDispId);
+
+	HRESULT (WINAPI * Invoke)(IDispatch* This,
+			DISPID dispIdMember, REFIID riid, LCID lcid,
+			WORD wFlags, DISPPARAMS *pDispParams, VARIANT *pVarResult,
+			EXCEPINFO *pExcepInfo, UINT *puArgErr);
+};
+
+struct _IDispatch
+{
+	IDispatchVtbl* lpVtbl;
+};
+
+/**
+ * IErrorLog
+ */
+
+struct _IErrorLogVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IErrorLog* This, REFIID riid, void** ppvObject);
+
+	ULONG (WINAPI * AddRef)(IErrorLog* This);
+
+	ULONG (WINAPI * Release)(IErrorLog* This);
+
+	HRESULT (WINAPI * AddError)(IErrorLog* This, LPCOLESTR pszPropName, EXCEPINFO *pExcepInfo);
+};
+
+struct _IErrorLog
+{
+	IErrorLogVtbl* lpVtbl;
+};
+
+/**
+ * IPropertyBag
+ */
+
+struct _IPropertyBagVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IPropertyBag* This, REFIID riid, void** ppvObject);
+
+	ULONG (WINAPI * AddRef)(IPropertyBag* This);
+
+	ULONG (WINAPI * Release)(IPropertyBag* This);
+
+	HRESULT (WINAPI * Read)(IPropertyBag* This,
+			LPCOLESTR pszPropName, VARIANT *pVar, IErrorLog *pErrorLog);
+
+	HRESULT (WINAPI * Write)(IPropertyBag* This, LPCOLESTR pszPropName, VARIANT *pVar);
+};
+
+struct _IPropertyBag
+{
+	IPropertyBagVtbl* lpVtbl;
+};
+
+/**
+ * Dynamic Virtual Channel COM API
+ */
 
 typedef struct _IWTSPlugin IWTSPlugin;
 typedef struct _IWTSPluginVtbl IWTSPluginVtbl;
@@ -345,174 +310,140 @@ typedef struct _IWTSVirtualChannelManagerVtbl IWTSVirtualChannelManagerVtbl;
 typedef struct _IWTSVirtualChannel IWTSVirtualChannel;
 typedef struct _IWTSVirtualChannelVtbl IWTSVirtualChannelVtbl;
 
-    struct _IWTSPluginVtbl
-    {
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IWTSPlugin * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IWTSPlugin * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IWTSPlugin * This);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Initialize )( 
-            __RPC__in IWTSPlugin * This,
-            /* [in] */ __RPC__in_opt IWTSVirtualChannelManager *pChannelMgr);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Connected )( 
-            __RPC__in IWTSPlugin * This);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Disconnected )( 
-            __RPC__in IWTSPlugin * This,
-            DWORD dwDisconnectCode);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Terminated )( 
-            __RPC__in IWTSPlugin * This);
-    };
+/**
+ * IWTSPlugin
+ */
 
-    struct _IWTSPlugin
-    {
-        IWTSPluginVtbl *lpVtbl;
-    };
+struct _IWTSPluginVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IWTSPlugin* This, REFIID riid, void** ppvObject);
 
-    struct _IWTSListenerVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IWTSListener * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IWTSListener * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IWTSListener * This);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *GetConfiguration )( 
-            __RPC__in IWTSListener * This,
-            /* [out] */ __RPC__deref_out_opt IPropertyBag **ppPropertyBag);
-    };
+	ULONG (WINAPI * AddRef)(IWTSPlugin* This);
 
-    struct _IWTSListener
-    {
-        IWTSListenerVtbl *lpVtbl;
-    };
+	ULONG (WINAPI * Release)(IWTSPlugin* This);
 
-    struct _IWTSListenerCallbackVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IWTSListenerCallback * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IWTSListenerCallback * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IWTSListenerCallback * This);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *OnNewChannelConnection )( 
-            __RPC__in IWTSListenerCallback * This,
-            /* [in] */ __RPC__in_opt IWTSVirtualChannel *pChannel,
-            /* [full][in] */ __RPC__in_opt BSTR data,
-            /* [out] */ __RPC__out BOOL *pbAccept,
-            /* [out] */ __RPC__deref_out_opt IWTSVirtualChannelCallback **ppCallback);
-    };
+	HRESULT (WINAPI * Initialize)(IWTSPlugin* This, IWTSVirtualChannelManager* pChannelMgr);
 
-    struct _IWTSListenerCallback
-    {
-        IWTSListenerCallbackVtbl *lpVtbl;
-    };
+	HRESULT (WINAPI * Connected)(IWTSPlugin* This);
 
-    struct _IWTSVirtualChannelCallbackVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IWTSVirtualChannelCallback * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IWTSVirtualChannelCallback * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IWTSVirtualChannelCallback * This);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *OnDataReceived )( 
-            __RPC__in IWTSVirtualChannelCallback * This,
-            /* [in] */ ULONG cbSize,
-            /* [size_is][in] */ __RPC__in_ecount_full(cbSize) BYTE *pBuffer);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *OnClose )( 
-            __RPC__in IWTSVirtualChannelCallback * This);
-    };
+	HRESULT (WINAPI * Disconnected)(IWTSPlugin* This, DWORD dwDisconnectCode);
 
-    struct _IWTSVirtualChannelCallback
-    {
-        IWTSVirtualChannelCallbackVtbl *lpVtbl;
-    };
+	HRESULT (WINAPI * Terminated)(IWTSPlugin* This);
+};
 
-    struct _IWTSVirtualChannelManagerVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IWTSVirtualChannelManager * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IWTSVirtualChannelManager * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IWTSVirtualChannelManager * This);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *CreateListener )( 
-            __RPC__in IWTSVirtualChannelManager * This,
-            /* [string][in] */ __RPC__in_string const char *pszChannelName,
-            /* [in] */ ULONG uFlags,
-            /* [in] */ __RPC__in_opt IWTSListenerCallback *pListenerCallback,
-            /* [out] */ __RPC__deref_out_opt IWTSListener **ppListener);
-    };
+struct _IWTSPlugin
+{
+	IWTSPluginVtbl* lpVtbl;
+};
 
-    struct _IWTSVirtualChannelManager
-    {
-        IWTSVirtualChannelManagerVtbl *lpVtbl;
-    };
+/**
+ * IWTSListener
+ */
 
-    struct _IWTSVirtualChannelVtbl
-    {        
-        HRESULT ( STDMETHODCALLTYPE *QueryInterface )( 
-            __RPC__in IWTSVirtualChannel * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject);
-        
-        ULONG ( STDMETHODCALLTYPE *AddRef )( 
-            __RPC__in IWTSVirtualChannel * This);
-        
-        ULONG ( STDMETHODCALLTYPE *Release )( 
-            __RPC__in IWTSVirtualChannel * This);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Write )( 
-            __RPC__in IWTSVirtualChannel * This,
-            /* [in] */ ULONG cbSize,
-            /* [size_is][in] */ __RPC__in_ecount_full(cbSize) BYTE *pBuffer,
-            /* [in] */ __RPC__in_opt IUnknown *pReserved);
-        
-        /* [helpstring] */ HRESULT ( STDMETHODCALLTYPE *Close )( 
-            __RPC__in IWTSVirtualChannel * This);
-    };
+struct _IWTSListenerVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IWTSListener* This, REFIID riid, void** ppvObject);
 
-    struct _IWTSVirtualChannel
-    {
-        IWTSVirtualChannelVtbl *lpVtbl;
-    };
+	ULONG (WINAPI * AddRef)(IWTSListener* This);
+
+	ULONG (WINAPI * Release)(IWTSListener* This);
+
+	HRESULT (WINAPI * GetConfiguration)(IWTSListener* This, IPropertyBag **ppPropertyBag);
+};
+
+struct _IWTSListener
+{
+	IWTSListenerVtbl* lpVtbl;
+};
+
+/**
+ * IWTSListenerCallback
+ */
+
+struct _IWTSListenerCallbackVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IWTSListenerCallback* This, REFIID riid, void** ppvObject);
+
+	ULONG (WINAPI * AddRef)(IWTSListenerCallback* This);
+
+	ULONG (WINAPI * Release)(IWTSListenerCallback* This);
+
+	HRESULT (WINAPI * OnNewChannelConnection)(IWTSListenerCallback* This,
+			IWTSVirtualChannel *pChannel, BSTR data, BOOL *pbAccept,
+			IWTSVirtualChannelCallback **ppCallback);
+};
+
+struct _IWTSListenerCallback
+{
+	IWTSListenerCallbackVtbl* lpVtbl;
+};
+
+/**
+ * IWTSVirtualChannelCallback
+ */
+
+struct _IWTSVirtualChannelCallbackVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IWTSVirtualChannelCallback* This, REFIID riid, void** ppvObject);
+
+	ULONG (WINAPI * AddRef)(IWTSVirtualChannelCallback* This);
+
+	ULONG (WINAPI * Release)(IWTSVirtualChannelCallback* This);
+
+	HRESULT (WINAPI * OnDataReceived)(IWTSVirtualChannelCallback* This, ULONG cbSize, BYTE *pBuffer);
+
+	HRESULT (WINAPI * OnClose)(IWTSVirtualChannelCallback* This);
+};
+
+struct _IWTSVirtualChannelCallback
+{
+	IWTSVirtualChannelCallbackVtbl* lpVtbl;
+};
+
+/**
+ * IWTSVirtualChannelManager
+ */
+
+struct _IWTSVirtualChannelManagerVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IWTSVirtualChannelManager* This, REFIID riid, void** ppvObject);
+
+	ULONG (WINAPI * AddRef)(IWTSVirtualChannelManager* This);
+
+	ULONG (WINAPI * Release)(IWTSVirtualChannelManager* This);
+
+	HRESULT (WINAPI * CreateListener)(IWTSVirtualChannelManager* This,
+			const char *pszChannelName, ULONG uFlags,
+			IWTSListenerCallback *pListenerCallback, IWTSListener **ppListener);
+};
+
+struct _IWTSVirtualChannelManager
+{
+	IWTSVirtualChannelManagerVtbl* lpVtbl;
+};
+
+/**
+ * IWTSVirtualChannel
+ */
+
+struct _IWTSVirtualChannelVtbl
+{
+	HRESULT (WINAPI * QueryInterface)(IWTSVirtualChannel* This, REFIID riid, void** ppvObject);
+
+	ULONG (WINAPI * AddRef)(IWTSVirtualChannel* This);
+
+	ULONG (WINAPI * Release)(IWTSVirtualChannel* This);
+
+	HRESULT (WINAPI * Write)(IWTSVirtualChannel* This,
+			ULONG cbSize, BYTE *pBuffer, IUnknown *pReserved);
+
+	HRESULT (WINAPI * Close)(IWTSVirtualChannel* This);
+};
+
+struct _IWTSVirtualChannel
+{
+	IWTSVirtualChannelVtbl* lpVtbl;
+};
 
 #endif
 

@@ -20,11 +20,7 @@ const IID IID_IWTSVirtualChannel = { 0xA1230207, 0xd6a7, 0x11d8, { 0xb9, 0xfd, 0
 
 static ULONG WinPR_IWTSPlugin_RefCount = 0;
 
-static HRESULT STDMETHODCALLTYPE WinPR_IWTSPlugin_QueryInterface( 
-            __RPC__in IWTSPlugin * This,
-            /* [in] */ __RPC__in REFIID riid,
-            /* [annotation][iid_is][out] */ 
-            __RPC__deref_out  void **ppvObject)
+static HRESULT WINAPI WinPR_IWTSPlugin_QueryInterface(IWTSPlugin* This, REFIID riid, void** ppvObject)
 {
 	*ppvObject = NULL;
 
@@ -41,15 +37,13 @@ static HRESULT STDMETHODCALLTYPE WinPR_IWTSPlugin_QueryInterface(
 	return S_OK;
 }
 
-ULONG STDMETHODCALLTYPE WinPR_IWTSPlugin_AddRef( 
-            __RPC__in IWTSPlugin * This)
+static ULONG WINAPI WinPR_IWTSPlugin_AddRef(IWTSPlugin* This)
 {
 	WinPR_IWTSPlugin_RefCount++;
 	return WinPR_IWTSPlugin_RefCount;
 }
-        
-ULONG STDMETHODCALLTYPE WinPR_IWTSPlugin_Release( 
-            __RPC__in IWTSPlugin * This)
+
+static ULONG WINAPI WinPR_IWTSPlugin_Release(IWTSPlugin* This)
 {
 	if (!WinPR_IWTSPlugin_RefCount)
 		return 0;
@@ -58,29 +52,23 @@ ULONG STDMETHODCALLTYPE WinPR_IWTSPlugin_Release(
 
 	return WinPR_IWTSPlugin_RefCount;
 }
-        
-HRESULT STDMETHODCALLTYPE WinPR_IWTSPlugin_Initialize( 
-            __RPC__in IWTSPlugin * This,
-            /* [in] */ __RPC__in_opt IWTSVirtualChannelManager *pChannelMgr)
+
+static HRESULT WINAPI WinPR_IWTSPlugin_Initialize(IWTSPlugin* This, IWTSVirtualChannelManager* pChannelMgr)
 {
 	return S_OK;
 }
         
-HRESULT STDMETHODCALLTYPE WinPR_IWTSPlugin_Connected( 
-            __RPC__in IWTSPlugin * This)
+static HRESULT WINAPI WinPR_IWTSPlugin_Connected(IWTSPlugin* This)
 {
 	return S_OK;
 }
         
-HRESULT STDMETHODCALLTYPE WinPR_IWTSPlugin_Disconnected( 
-            __RPC__in IWTSPlugin * This,
-            DWORD dwDisconnectCode)
+static HRESULT WINAPI WinPR_IWTSPlugin_Disconnected(IWTSPlugin* This, DWORD dwDisconnectCode)
 {
 	return S_OK;
 }
         
-HRESULT STDMETHODCALLTYPE WinPR_IWTSPlugin_Terminated( 
-            __RPC__in IWTSPlugin * This)
+static HRESULT WINAPI WinPR_IWTSPlugin_Terminated(IWTSPlugin* This)
 {
 	return S_OK;
 }
