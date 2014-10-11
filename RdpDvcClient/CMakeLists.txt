@@ -6,6 +6,8 @@ include_directories(${WinPR_INCLUDE_DIR})
 include_directories(${FreeRDP_INCLUDE_DIR})
 
 set(${MODULE_PREFIX}_SRCS
+	rdp_dvc_com.c
+	rdp_dvc_com.h
 	rdp_dvc_client.c
 	rdp_dvc_client.h)
 
