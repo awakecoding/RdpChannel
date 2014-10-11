@@ -125,6 +125,8 @@ int main(int argc, char** argv)
 {
 	BOOL bSuccess;
 	BOOL blocking;
+	BOOL overlapped;
+	HANDLE hFile;
 	HANDLE hEvent;
 	HANDLE hServer;
 	HANDLE hChannel;
@@ -135,6 +137,12 @@ int main(int argc, char** argv)
 
 	hEvent = NULL;
 	blocking = FALSE;
+	overlapped = FALSE;
+
+#ifdef _WIN32
+	blocking = TRUE;
+	overlapped = TRUE;
+#endif
 
 	hServer = WTS_CURRENT_SERVER_HANDLE;
 
@@ -159,6 +167,27 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
+	if (overlapped)
+	{
+		if (!WTSVirtualChannelQuery(hChannel, WTSVirtualFileHandle, (PVOID*) &pBuffer, &bytesReturned) ||
+				(bytesReturned != sizeof(HANDLE)))
+		{
+			fprintf(stderr, "WTSVirtualChannelQuery failed (GetLastError() = %d)\n", GetLastError());
+			return 0;
+		}
+
+		bSuccess = DuplicateHandle(GetCurrentProcess(), *((HANDLE*) pBuffer),
+			GetCurrentProcess(), &hFile, 0, FALSE, DUPLICATE_SAME_ACCESS);
+
+		if (!bSuccess)
+		{
+			fprintf(stderr, "DuplicateHandle failed (GetLastError() = %d)\n", GetLastError());
+			return 0;
+		}
+
+		WTSFreeMemory(pBuffer);
+	}
+
 	if (!blocking)
 	{
 		if (!WTSVirtualChannelQuery(hChannel, WTSVirtualEventHandle, (PVOID*) &pBuffer, &bytesReturned) ||
@@ -168,7 +197,7 @@ int main(int argc, char** argv)
 			return 0;
 		}
 
-		CopyMemory(&hEvent, pBuffer, sizeof(HANDLE));
+		hEvent = *((HANDLE*) pBuffer);
 		WTSFreeMemory(pBuffer);
 	}
 
