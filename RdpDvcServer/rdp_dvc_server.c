@@ -164,7 +164,7 @@ int main(int argc, char** argv)
 
 	if (!hChannel)
 	{
-		fprintf(stderr, "WTSVirtualChannelOpen failed (GetLastError() = %d)\n", GetLastError());
+		fprintf(stderr, "WTSVirtualChannelOpenEx failed (GetLastError() = %d)\n", GetLastError());
 		return 0;
 	}
 

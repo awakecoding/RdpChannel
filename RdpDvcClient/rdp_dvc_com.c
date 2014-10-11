@@ -5,6 +5,8 @@
 
 #include "rdp_dvc_com.h"
 
+static wLog* g_Log = NULL;
+
 #ifndef WITH_DVC_API
 
 const IID IID_IUnknown = { 0x00000000, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
@@ -201,6 +203,10 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
 	HRESULT hr;
 
+#ifdef _WIN32
+	MessageBoxA(NULL, "DllGetClassObject", "RdpDvcClient", 0);
+#endif
+
 	*ppv = NULL;
 
 	if (!IsEqualCLSID(rclsid, &IID_IWTSPlugin))
@@ -228,6 +234,21 @@ HRESULT WINAPI DllUnregisterServer(void)
 
 DECLSPEC_EXPORT HRESULT VCAPITYPE VirtualChannelGetInstance(REFIID refiid, ULONG* pNumObjs, VOID** ppObjArray)
 {
+#ifdef _WIN32
+	MessageBoxA(NULL, "VirtualChannelGetInstance", "RdpDvcClient", 0);
+#endif
+
+	g_Log = WLog_Get("rdp.dvc.client");
+
+#ifdef _WIN32
+	WLog_SetLogAppenderType(g_Log, WLOG_APPENDER_FILE);
+	WLog_OpenAppender(g_Log);
+#endif
+
+	WLog_SetLogLevel(g_Log, WLOG_DEBUG);
+
+	WLog_Print(g_Log, WLOG_DEBUG, "VirtualChannelGetInstance");
+
 	if (!IsEqualCLSID(refiid, &IID_IWTSPlugin))
 		return CLASS_E_CLASSNOTAVAILABLE;
 
