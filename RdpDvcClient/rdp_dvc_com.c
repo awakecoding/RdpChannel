@@ -99,12 +99,27 @@ static IWTSPluginVtbl WinPR_IWTSPluginVtbl =
 	WinPR_IWTSPlugin_Terminated
 };
 
-static IWTSPlugin WinPR_IWTSPlugin =
+IWTSPlugin WinPR_IWTSPlugin =
 {
 	&WinPR_IWTSPluginVtbl
 };
 
+HRESULT WINAPI DllCanUnloadNow(void)
+{
+	return S_OK;
+}
+
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
+{
+	return S_OK;
+}
+
+HRESULT WINAPI DllRegisterServer(void)
+{
+	return S_OK;
+}
+
+HRESULT WINAPI DllUnregisterServer(void)
 {
 	return S_OK;
 }

@@ -5,13 +5,66 @@
 #include <winpr/crt.h>
 #include <winpr/windows.h>
 
-#define WITH_DVC_API _WIN32
+#ifdef _WIN32
+#define WITH_DVC_API
+#endif
 
 #ifdef WITH_DVC_API
 
 #include <tsvirtualchannels.h>
 
 #else
+
+#ifndef _WIN32
+
+#include <winpr/error.h>
+
+typedef USHORT VARTYPE;
+typedef BOOL VARIANT_BOOL;
+typedef BOOL _VARIANT_BOOL;
+
+typedef double DATE;
+
+typedef WCHAR OLECHAR;
+typedef OLECHAR LPOLESTR;
+typedef const OLECHAR* LPCOLESTR;
+
+#define REFCLSID const IID * const
+
+#define InlineIsEqualGUID(rguid1, rguid2) \
+	(((ULONG*) rguid1)[0] == ((ULONG*) rguid2)[0] && \
+	((ULONG*) rguid1)[1] == ((ULONG*) rguid2)[1] && \
+	((ULONG*) rguid1)[2] == ((ULONG*) rguid2)[2] && \
+	((ULONG*) rguid1)[3] == ((ULONG*) rguid2)[3])
+
+#define IsEqualGUID(rguid1, rguid2) (!memcmp(rguid1, rguid2, sizeof(GUID)))
+
+#define IsEqualIID(riid1, riid2)	IsEqualGUID(riid1, riid2)
+#define IsEqualCLSID(rclsid1, rclsid2)	IsEqualGUID(rclsid1, rclsid2)
+
+typedef union tagCY
+{
+	struct
+	{
+		ULONG Lo;
+		LONG Hi;
+	};
+	LONGLONG int64;
+} CY;
+
+#define STDMETHODCALLTYPE
+
+#define __RPC__in
+#define __RPC__out
+#define __RPC__in_opt
+#define __RPC__in_range(_x, _y)
+#define __RPC__in_string
+#define __RPC__deref_out
+#define __RPC__deref_out_opt
+#define __RPC__in_ecount_full(_x)
+#define __RPC__out_ecount_full(_x)
+
+#endif
 
 typedef void* ITypeInfo;
 typedef void* IRecordInfo;
