@@ -3,10 +3,11 @@
 #define RDP_DVC_CLIENT_COM_H
 
 #include <winpr/crt.h>
+#include <winpr/spec.h>
 #include <winpr/windows.h>
 
 #ifdef _WIN32
-#define WITH_DVC_API
+//#define WITH_DVC_API
 #endif
 
 #ifdef WITH_DVC_API
@@ -71,6 +72,9 @@ typedef void* IRecordInfo;
 
 typedef struct _IUnknown IUnknown;
 typedef struct _IUnknownVtbl IUnknownVtbl;
+
+typedef struct _IClassFactory IClassFactory;
+typedef struct _IClassFactoryVtbl IClassFactoryVtbl;
 
 typedef struct _IDispatch IDispatch;
 typedef struct _IDispatchVtbl IDispatchVtbl;
@@ -211,6 +215,28 @@ struct _IUnknownVtbl
 struct _IUnknown
 {
 	IUnknownVtbl* lpVtbl;
+};
+
+/**
+ * IClassFactory
+ */
+
+struct _IClassFactoryVtbl
+{        
+	HRESULT (WINAPI * QueryInterface)(IClassFactory* This, REFIID riid, void** ppvObject);
+
+	ULONG (WINAPI * AddRef)(IClassFactory* This);
+
+	ULONG (WINAPI * Release)(IClassFactory* This);
+
+	HRESULT (WINAPI * CreateInstance)(IClassFactory* This, IUnknown* pUnkOuter, REFIID riid, void** ppvObject);
+
+	HRESULT (WINAPI * LockServer)(IClassFactory* This, BOOL fLock);
+};
+
+struct _IClassFactory
+{
+	IClassFactoryVtbl* lpVtbl;
 };
 
 /**

@@ -2,6 +2,9 @@
 #ifndef RDP_DVC_CLIENT_MAIN_H
 #define RDP_DVC_CLIENT_MAIN_H
 
+#include <winpr/crt.h>
+#include <winpr/spec.h>
+
 #include <freerdp/dvc.h>
 #include <freerdp/addin.h>
 
