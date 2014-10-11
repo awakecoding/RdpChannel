@@ -130,7 +130,7 @@ static void rdp_svc_virtual_channel_event_write_complete(rdpSvcAddin* svc,
 	Stream_Free((wStream*) pData, TRUE);
 }
 
-static void rdp_svc_virtual_channel_open_event(UINT32 openHandle, UINT32 event,
+static void VCAPITYPE rdp_svc_virtual_channel_open_event(UINT32 openHandle, UINT32 event,
 		void* pData, UINT32 dataLength, UINT32 totalLength, UINT32 dataFlags)
 {
 	rdpSvcAddin* svc;
@@ -249,7 +249,7 @@ static void rdp_svc_virtual_channel_event_terminated(rdpSvcAddin* svc)
 	rdp_svc_remove_init_handle_data(svc->InitHandle);
 }
 
-static void rdp_svc_virtual_channel_init_event(void* pInitHandle, UINT32 event, void* pData, UINT32 dataLength)
+static void VCAPITYPE rdp_svc_virtual_channel_init_event(void* pInitHandle, UINT32 event, void* pData, UINT32 dataLength)
 {
 	rdpSvcAddin* svc;
 
