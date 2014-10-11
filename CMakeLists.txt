@@ -19,3 +19,6 @@ endif()
 add_subdirectory(RdpSvcClient)
 add_subdirectory(RdpSvcServer)
 
+add_subdirectory(RdpDvcClient)
+add_subdirectory(RdpDvcServer)
+

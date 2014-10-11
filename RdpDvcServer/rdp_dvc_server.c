@@ -13,7 +13,7 @@
 #include <winpr/library.h>
 #include <winpr/collections.h>
 
-#include "rdp_svc_server.h"
+#include "rdp_dvc_server.h"
 
 static wLog* g_Log = NULL;
 
@@ -34,9 +34,9 @@ const char* WM_WTS_STRINGS[] =
 	""
 };
 
-LRESULT CALLBACK RdpSvcWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK RdpDvcWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	//printf("RdpSvcWindowProc: uMsg: 0x%04X\n", uMsg);
+	//printf("RdpDvcWindowProc: uMsg: 0x%04X\n", uMsg);
 
 	switch (uMsg)
 	{
@@ -62,7 +62,7 @@ LRESULT CALLBACK RdpSvcWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 	return 0;
 }
 
-int rdp_svc_server_register_session_notification()
+int rdp_dvc_server_register_session_notification()
 {
 	MSG msg;
 	HWND hWnd;
@@ -75,7 +75,7 @@ int rdp_svc_server_register_session_notification()
 	ZeroMemory(&wndClassEx, sizeof(WNDCLASSEX));
 	wndClassEx.cbSize = sizeof(WNDCLASSEX);
 	wndClassEx.style = 0;
-	wndClassEx.lpfnWndProc = RdpSvcWindowProc;
+	wndClassEx.lpfnWndProc = RdpDvcWindowProc;
 	wndClassEx.cbClsExtra = 0;
 	wndClassEx.cbWndExtra = 0;
 	wndClassEx.hInstance = hModule;
@@ -156,11 +156,11 @@ int main(int argc, char** argv)
 
 	WLog_SetLogLevel(g_Log, WLOG_DEBUG);
 
-	WLog_Print(g_Log, WLOG_DEBUG, "RdpSvc Channel Server Open");
+	WLog_Print(g_Log, WLOG_DEBUG, "RdpDvc Channel Server Open");
 
-	//rdp_svc_server_register_session_notification();
+	//rdp_dvc_server_register_session_notification();
 
-	hChannel = WTSVirtualChannelOpen(hServer, WTS_CURRENT_SESSION, "RdpSvc");
+	hChannel = WTSVirtualChannelOpenEx(WTS_CURRENT_SESSION, "RdpDvc", WTS_CHANNEL_OPTION_DYNAMIC);
 
 	if (!hChannel)
 	{
@@ -248,7 +248,7 @@ int main(int argc, char** argv)
 
 	WTSVirtualChannelClose(hChannel);
 
-	WLog_Print(g_Log, WLOG_DEBUG, "RdpSvc Channel Server Close");
+	WLog_Print(g_Log, WLOG_DEBUG, "RdpDvc Channel Server Close");
 
 	return 0;
 }
