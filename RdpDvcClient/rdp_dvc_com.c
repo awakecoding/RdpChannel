@@ -71,7 +71,7 @@ static HRESULT WINAPI WinPR_IWTSPlugin_Initialize(IWTSPlugin* This, IWTSVirtualC
 	IWTSListener* pListener = NULL;
 	IWTSListenerCallback* pListenerCallback = NULL;
 
-	hr = WinPR_IClassFactory_CreateInstance(&WinPR_IClassFactory, NULL, &IID_IWTSListener, &pListener);
+	hr = WinPR_IClassFactory_CreateInstance(&WinPR_IClassFactory, NULL, (REFIID) &IID_IWTSListener, (void**) &pListener);
 
 	if (FAILED(hr))
 		return hr;
@@ -164,7 +164,7 @@ static HRESULT WINAPI WinPR_IWTSListenerCallback_OnNewChannelConnection(IWTSList
 	IWTSVirtualChannelCallback* pCallback = NULL;
 
 	hr = WinPR_IClassFactory_CreateInstance(&WinPR_IClassFactory, NULL,
-		&IID_IWTSVirtualChannelCallback, &pCallback);
+			(REFIID) &IID_IWTSVirtualChannelCallback, (void**) &pCallback);
 
 	if (FAILED(hr))
 		return hr;
