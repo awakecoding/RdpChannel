@@ -21,6 +21,11 @@ const IID IID_IWTSVirtualChannel = { 0xA1230207, 0xd6a7, 0x11d8, { 0xb9, 0xfd, 0
 
 #endif
 
+static IClassFactory WinPR_IClassFactory;
+static HRESULT WINAPI WinPR_IClassFactory_CreateInstance(IClassFactory* This, IUnknown* pUnkOuter, REFIID riid, void** ppvObject);
+
+static IWTSVirtualChannel* g_Channel = NULL;
+
 /**
  * IWTSPlugin
  */
@@ -62,6 +67,20 @@ static ULONG WINAPI WinPR_IWTSPlugin_Release(IWTSPlugin* This)
 
 static HRESULT WINAPI WinPR_IWTSPlugin_Initialize(IWTSPlugin* This, IWTSVirtualChannelManager* pChannelMgr)
 {
+	HRESULT hr;
+	IWTSListener* pListener = NULL;
+	IWTSListenerCallback* pListenerCallback = NULL;
+
+	hr = WinPR_IClassFactory_CreateInstance(&WinPR_IClassFactory, NULL, &IID_IWTSListener, &pListener);
+
+	if (FAILED(hr))
+		return hr;
+
+	hr = pChannelMgr->lpVtbl->CreateListener(pChannelMgr, "RdpDvc", 0, pListenerCallback, &pListener);
+
+	if (FAILED(hr))
+		return hr;
+
 	return S_OK;
 }
         
@@ -94,9 +113,168 @@ static IWTSPluginVtbl WinPR_IWTSPluginVtbl =
 	WinPR_IWTSPlugin_Terminated
 };
 
-IWTSPlugin WinPR_IWTSPlugin =
+static IWTSPlugin WinPR_IWTSPlugin =
 {
 	&WinPR_IWTSPluginVtbl
+};
+
+/**
+ * IWTSListenerCallback
+ */
+
+static ULONG WinPR_IWTSListenerCallback_RefCount = 0;
+
+static HRESULT WINAPI WinPR_IWTSListenerCallback_QueryInterface(IWTSListenerCallback* This, REFIID riid, void** ppvObject)
+{
+	*ppvObject = NULL;
+
+	if (IsEqualIID(riid, &IID_IWTSListenerCallback) || IsEqualIID(riid, &IID_IUnknown))
+	{
+		*ppvObject = This;
+	}
+
+	if (!(*ppvObject))
+		return E_NOINTERFACE;
+
+	This->lpVtbl->AddRef(This);
+
+	return S_OK;
+}
+
+static ULONG WINAPI WinPR_IWTSListenerCallback_AddRef(IWTSListenerCallback* This)
+{
+	WinPR_IWTSListenerCallback_RefCount++;
+	return WinPR_IWTSListenerCallback_RefCount;
+}
+
+static ULONG WINAPI WinPR_IWTSListenerCallback_Release(IWTSListenerCallback* This)
+{
+	if (!WinPR_IWTSListenerCallback_RefCount)
+		return 0;
+
+	WinPR_IWTSListenerCallback_RefCount--;
+
+	return WinPR_IWTSListenerCallback_RefCount;
+}
+
+static HRESULT WINAPI WinPR_IWTSListenerCallback_OnNewChannelConnection(IWTSListenerCallback* This,
+		IWTSVirtualChannel* pChannel, BSTR data, BOOL* pbAccept, IWTSVirtualChannelCallback** ppCallback)
+{
+	HRESULT hr;
+	IWTSVirtualChannelCallback* pCallback = NULL;
+
+	hr = WinPR_IClassFactory_CreateInstance(&WinPR_IClassFactory, NULL,
+		&IID_IWTSVirtualChannelCallback, &pCallback);
+
+	if (FAILED(hr))
+		return hr;
+
+	pCallback->lpVtbl->AddRef(pCallback);
+
+	g_Channel = pChannel;
+
+	*ppCallback = pCallback;
+	*pbAccept = TRUE;
+
+	return S_OK;
+}
+
+static IWTSListenerCallbackVtbl WinPR_IWTSListenerCallbackVtbl =
+{
+	/* IUnknown */
+	WinPR_IWTSListenerCallback_QueryInterface,
+	WinPR_IWTSListenerCallback_AddRef,
+	WinPR_IWTSListenerCallback_Release,
+
+	/* IWTSListenerCallback */
+	WinPR_IWTSListenerCallback_OnNewChannelConnection
+};
+
+static IWTSListenerCallback WinPR_IWTSListenerCallback =
+{
+	&WinPR_IWTSListenerCallbackVtbl
+};
+
+/**
+ * IWTSVirtualChannelCallback
+ */
+
+static ULONG WinPR_IWTSVirtualChannelCallback_RefCount = 0;
+
+static HRESULT WINAPI WinPR_IWTSVirtualChannelCallback_QueryInterface(IWTSVirtualChannelCallback* This, REFIID riid, void** ppvObject)
+{
+	*ppvObject = NULL;
+
+	if (IsEqualIID(riid, &IID_IWTSVirtualChannelCallback) || IsEqualIID(riid, &IID_IUnknown))
+	{
+		*ppvObject = This;
+	}
+
+	if (!(*ppvObject))
+		return E_NOINTERFACE;
+
+	This->lpVtbl->AddRef(This);
+
+	return S_OK;
+}
+
+static ULONG WINAPI WinPR_IWTSVirtualChannelCallback_AddRef(IWTSVirtualChannelCallback* This)
+{
+	WinPR_IWTSVirtualChannelCallback_RefCount++;
+	return WinPR_IWTSVirtualChannelCallback_RefCount;
+}
+
+static ULONG WINAPI WinPR_IWTSVirtualChannelCallback_Release(IWTSVirtualChannelCallback* This)
+{
+	if (!WinPR_IWTSVirtualChannelCallback_RefCount)
+		return 0;
+
+	WinPR_IWTSVirtualChannelCallback_RefCount--;
+
+	return WinPR_IWTSVirtualChannelCallback_RefCount;
+}
+
+static HRESULT WINAPI WinPR_IWTSVirtualChannelCallback_OnDataReceived(IWTSVirtualChannelCallback* This, ULONG cbSize, BYTE* pBuffer)
+{
+	HRESULT hr;
+	IWTSVirtualChannel* pChannel = g_Channel;
+
+	if (!pChannel)
+		return S_FALSE;
+
+	hr = pChannel->lpVtbl->Write(pChannel, cbSize, pBuffer, NULL);
+
+	return hr;
+}
+
+static HRESULT WINAPI WinPR_IWTSVirtualChannelCallback_OnClose(IWTSVirtualChannelCallback* This)
+{
+	HRESULT hr;
+	IWTSVirtualChannel* pChannel = g_Channel;
+
+	if (!pChannel)
+		return S_FALSE;
+
+	hr = pChannel->lpVtbl->Close(pChannel);
+
+	return hr;
+}
+
+static IWTSVirtualChannelCallbackVtbl WinPR_IWTSVirtualChannelCallbackVtbl =
+{
+	/* IUnknown */
+	WinPR_IWTSVirtualChannelCallback_QueryInterface,
+	WinPR_IWTSVirtualChannelCallback_AddRef,
+	WinPR_IWTSVirtualChannelCallback_Release,
+
+	/* IWTSVirtualChannelCallback */
+	WinPR_IWTSVirtualChannelCallback_OnDataReceived,
+	WinPR_IWTSVirtualChannelCallback_OnClose
+};
+
+static IWTSVirtualChannelCallback WinPR_IWTSVirtualChannelCallback =
+{
+	&WinPR_IWTSVirtualChannelCallbackVtbl
 };
 
 /**
@@ -160,6 +338,32 @@ static HRESULT WINAPI WinPR_IClassFactory_CreateInstance(IClassFactory* This, IU
 
 		hr = pObj->lpVtbl->QueryInterface(pObj, riid, ppvObject);
 	}
+	else if (IsEqualCLSID(riid, &IID_IWTSListenerCallback))
+	{
+		IWTSListenerCallback* pObj;
+
+		pObj = (IWTSListenerCallback*) calloc(1, sizeof(IWTSListenerCallback));
+
+		if (!pObj)
+			return E_OUTOFMEMORY;
+
+		CopyMemory(pObj, &WinPR_IWTSListenerCallback, sizeof(IWTSListenerCallback));
+
+		hr = pObj->lpVtbl->QueryInterface(pObj, riid, ppvObject);
+	}
+	else if (IsEqualCLSID(riid, &IID_IWTSVirtualChannelCallback))
+	{
+		IWTSVirtualChannelCallback* pObj;
+
+		pObj = (IWTSVirtualChannelCallback*) calloc(1, sizeof(IWTSVirtualChannelCallback));
+
+		if (!pObj)
+			return E_OUTOFMEMORY;
+
+		CopyMemory(pObj, &WinPR_IWTSVirtualChannelCallback, sizeof(IWTSVirtualChannelCallback));
+
+		hr = pObj->lpVtbl->QueryInterface(pObj, riid, ppvObject);
+	}
 	else
 	{
 		return CLASS_E_CLASSNOTAVAILABLE;
@@ -185,7 +389,7 @@ static IClassFactoryVtbl WinPR_IClassFactoryVtbl =
 	WinPR_IClassFactory_LockServer
 };
 
-IClassFactory WinPR_IClassFactory =
+static IClassFactory WinPR_IClassFactory =
 {
 	&WinPR_IClassFactoryVtbl
 };
