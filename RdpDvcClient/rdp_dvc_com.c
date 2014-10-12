@@ -71,31 +71,43 @@ static HRESULT WINAPI WinPR_IWTSPlugin_Initialize(IWTSPlugin* This, IWTSVirtualC
 	IWTSListener* pListener = NULL;
 	IWTSListenerCallback* pListenerCallback = NULL;
 
-	hr = WinPR_IClassFactory_CreateInstance(&WinPR_IClassFactory, NULL, (REFIID) &IID_IWTSListener, (void**) &pListener);
+	WLog_Print(g_Log, WLOG_DEBUG, "IWTSPlugin::Initialize");
+
+	hr = WinPR_IClassFactory_CreateInstance(&WinPR_IClassFactory, NULL,
+		(REFIID) &IID_IWTSListenerCallback, (void**) &pListenerCallback);
 
 	if (FAILED(hr))
+	{
+		WLog_Print(g_Log, WLOG_DEBUG, "IClassFactory::CreateInstance(IWTSListener) failed: 0x%04X", hr);
 		return hr;
+	}
 
 	hr = pChannelMgr->lpVtbl->CreateListener(pChannelMgr, "RdpDvc", 0, pListenerCallback, &pListener);
 
 	if (FAILED(hr))
+	{
+		WLog_Print(g_Log, WLOG_DEBUG, "IWTSVirtualChannelManager::CreateListener failed: 0x%04X", hr);
 		return hr;
+	}
 
 	return S_OK;
 }
         
 static HRESULT WINAPI WinPR_IWTSPlugin_Connected(IWTSPlugin* This)
 {
+	WLog_Print(g_Log, WLOG_DEBUG, "IWTSPlugin::Connected");
 	return S_OK;
 }
         
 static HRESULT WINAPI WinPR_IWTSPlugin_Disconnected(IWTSPlugin* This, DWORD dwDisconnectCode)
 {
+	WLog_Print(g_Log, WLOG_DEBUG, "IWTSPlugin::Disconnected");
 	return S_OK;
 }
         
 static HRESULT WINAPI WinPR_IWTSPlugin_Terminated(IWTSPlugin* This)
 {
+	WLog_Print(g_Log, WLOG_DEBUG, "IWTSPlugin::Terminated");
 	return S_OK;
 }
 
@@ -116,6 +128,67 @@ static IWTSPluginVtbl WinPR_IWTSPluginVtbl =
 static IWTSPlugin WinPR_IWTSPlugin =
 {
 	&WinPR_IWTSPluginVtbl
+};
+
+/**
+ * IWTSListener
+ */
+
+static ULONG WinPR_IWTSListener_RefCount = 0;
+
+static HRESULT WINAPI WinPR_IWTSListener_QueryInterface(IWTSListener* This, REFIID riid, void** ppvObject)
+{
+	*ppvObject = NULL;
+
+	if (IsEqualIID(riid, &IID_IWTSListener) || IsEqualIID(riid, &IID_IUnknown))
+	{
+		*ppvObject = This;
+	}
+
+	if (!(*ppvObject))
+		return E_NOINTERFACE;
+
+	This->lpVtbl->AddRef(This);
+
+	return S_OK;
+}
+
+static ULONG WINAPI WinPR_IWTSListener_AddRef(IWTSListener* This)
+{
+	WinPR_IWTSListener_RefCount++;
+	return WinPR_IWTSListener_RefCount;
+}
+
+static ULONG WINAPI WinPR_IWTSListener_Release(IWTSListener* This)
+{
+	if (!WinPR_IWTSListener_RefCount)
+		return 0;
+
+	WinPR_IWTSListener_RefCount--;
+
+	return WinPR_IWTSListener_RefCount;
+}
+
+static HRESULT WINAPI WinPR_IWTSListener_GetConfiguration(IWTSListener* This, IPropertyBag** ppPropertyBag)
+{
+	WLog_Print(g_Log, WLOG_DEBUG, "IWTSListener::GetConfiguration");
+	return S_OK;
+}
+
+static IWTSListenerVtbl WinPR_IWTSListenerVtbl =
+{
+	/* IUnknown */
+	WinPR_IWTSListener_QueryInterface,
+	WinPR_IWTSListener_AddRef,
+	WinPR_IWTSListener_Release,
+
+	/* IWTSListener */
+	WinPR_IWTSListener_GetConfiguration
+};
+
+static IWTSListener WinPR_IWTSListener =
+{
+	&WinPR_IWTSListenerVtbl
 };
 
 /**
@@ -162,6 +235,8 @@ static HRESULT WINAPI WinPR_IWTSListenerCallback_OnNewChannelConnection(IWTSList
 {
 	HRESULT hr;
 	IWTSVirtualChannelCallback* pCallback = NULL;
+
+	WLog_Print(g_Log, WLOG_DEBUG, "IWTSListenerCallback::OnNewChannelConnection");
 
 	hr = WinPR_IClassFactory_CreateInstance(&WinPR_IClassFactory, NULL,
 			(REFIID) &IID_IWTSVirtualChannelCallback, (void**) &pCallback);
@@ -239,6 +314,8 @@ static HRESULT WINAPI WinPR_IWTSVirtualChannelCallback_OnDataReceived(IWTSVirtua
 	HRESULT hr;
 	IWTSVirtualChannel* pChannel = g_Channel;
 
+	WLog_Print(g_Log, WLOG_DEBUG, "IWTSVirtualChannelCallback::OnDataReceived");
+
 	if (!pChannel)
 		return S_FALSE;
 
@@ -251,6 +328,8 @@ static HRESULT WINAPI WinPR_IWTSVirtualChannelCallback_OnClose(IWTSVirtualChanne
 {
 	HRESULT hr;
 	IWTSVirtualChannel* pChannel = g_Channel;
+
+	WLog_Print(g_Log, WLOG_DEBUG, "IWTSVirtualChannelCallback::OnClose");
 
 	if (!pChannel)
 		return S_FALSE;
@@ -338,6 +417,19 @@ static HRESULT WINAPI WinPR_IClassFactory_CreateInstance(IClassFactory* This, IU
 
 		hr = pObj->lpVtbl->QueryInterface(pObj, riid, ppvObject);
 	}
+	else if (IsEqualCLSID(riid, &IID_IWTSListener))
+	{
+		IWTSListener* pObj;
+
+		pObj = (IWTSListener*) calloc(1, sizeof(IWTSListener));
+
+		if (!pObj)
+			return E_OUTOFMEMORY;
+
+		CopyMemory(pObj, &WinPR_IWTSListener, sizeof(IWTSListener));
+
+		hr = pObj->lpVtbl->QueryInterface(pObj, riid, ppvObject);
+	}
 	else if (IsEqualCLSID(riid, &IID_IWTSListenerCallback))
 	{
 		IWTSListenerCallback* pObj;
@@ -407,9 +499,19 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
 	HRESULT hr;
 
+	if (!g_Log)
+	{
+		g_Log = WLog_Get("rdp.dvc.client");
+
 #ifdef _WIN32
-	MessageBoxA(NULL, "DllGetClassObject", "RdpDvcClient", 0);
+		WLog_SetLogAppenderType(g_Log, WLOG_APPENDER_FILE);
+		WLog_OpenAppender(g_Log);
 #endif
+
+		WLog_SetLogLevel(g_Log, WLOG_DEBUG);
+	}
+
+	WLog_Print(g_Log, WLOG_DEBUG, "DllGetClassObject");
 
 	*ppv = NULL;
 
@@ -438,18 +540,17 @@ HRESULT WINAPI DllUnregisterServer(void)
 
 DECLSPEC_EXPORT HRESULT VCAPITYPE VirtualChannelGetInstance(REFIID refiid, ULONG* pNumObjs, VOID** ppObjArray)
 {
-#ifdef _WIN32
-	MessageBoxA(NULL, "VirtualChannelGetInstance", "RdpDvcClient", 0);
-#endif
-
-	g_Log = WLog_Get("rdp.dvc.client");
+	if (!g_Log)
+	{
+		g_Log = WLog_Get("rdp.dvc.client");
 
 #ifdef _WIN32
-	WLog_SetLogAppenderType(g_Log, WLOG_APPENDER_FILE);
-	WLog_OpenAppender(g_Log);
+		WLog_SetLogAppenderType(g_Log, WLOG_APPENDER_FILE);
+		WLog_OpenAppender(g_Log);
 #endif
 
-	WLog_SetLogLevel(g_Log, WLOG_DEBUG);
+		WLog_SetLogLevel(g_Log, WLOG_DEBUG);
+	}
 
 	WLog_Print(g_Log, WLOG_DEBUG, "VirtualChannelGetInstance");
 
