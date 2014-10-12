@@ -124,6 +124,7 @@ int rdp_dvc_server_register_session_notification()
 
 int main(int argc, char** argv)
 {
+	DWORD error;
 	BOOL bSuccess;
 	BOOL blocking;
 	BOOL overlapped;
@@ -205,14 +206,16 @@ int main(int argc, char** argv)
 	while (1)
 	{
 		BOOL bSuccess;
-		BYTE rgbBuffer[1024];
 		ULONG ulBytesWritten;
+		BYTE writeBuffer[1024];
 		ULONG ulBytesRead;
+		BYTE readBuffer[8192];
+		CHANNEL_PDU_HEADER channelPduHeader;
 
-		FillMemory(rgbBuffer, sizeof(rgbBuffer), fillValue);
+		FillMemory(writeBuffer, sizeof(writeBuffer), fillValue);
 		fillValue = (fillValue + 1) % 0xFF;
 
-		bSuccess = WTSVirtualChannelWrite(hChannel, (PCHAR) rgbBuffer, sizeof(rgbBuffer), &ulBytesWritten);
+		bSuccess = WTSVirtualChannelWrite(hChannel, (PCHAR) writeBuffer, sizeof(writeBuffer), &ulBytesWritten);
 
 		if (!bSuccess)
 		{
@@ -233,11 +236,42 @@ int main(int argc, char** argv)
 			}
 		}
 
-		bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) rgbBuffer, sizeof(rgbBuffer), &ulBytesRead);
+		ulBytesRead = 0;
+
+		while (!ulBytesRead)
+		{
+			bSuccess = WTSVirtualChannelRead(hChannel, 100,
+				(PCHAR) &channelPduHeader, sizeof(CHANNEL_PDU_HEADER), &ulBytesRead);
+
+			error = GetLastError();
+
+			if (error == ERROR_IO_INCOMPLETE)
+				continue;
+
+			if (!bSuccess && (error != ERROR_MORE_DATA))
+			{
+				fprintf(stderr, "WTSVirtualChannelRead failed (GetLastError() = %d)\n", error);
+				break;
+			}
+
+			if (ulBytesRead && (ulBytesRead != sizeof(CHANNEL_PDU_HEADER)))
+			{
+				fprintf(stderr, "WTSVirtualChannelRead failed to read channel pdu header\n");
+				break;
+			}
+		}
+
+		bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) readBuffer, channelPduHeader.length, &ulBytesRead);
 
 		if (!bSuccess)
 		{
 			fprintf(stderr, "WTSVirtualChannelRead failed (GetLastError() = %d)\n", GetLastError());
+			break;
+		}
+
+		if (ulBytesRead != channelPduHeader.length)
+		{
+			fprintf(stderr, "WTSVirtualChannelRead failed to read channel pdu payload\n");
 			break;
 		}
 
