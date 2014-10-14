@@ -176,11 +176,12 @@ int main(int argc, char** argv)
 	while (1)
 	{
 		BOOL bSuccess;
+		UINT32 offset;
 		ULONG ulBytesWritten;
-		BYTE writeBuffer[1024];
+		BYTE writeBuffer[2048];
 		ULONG ulBytesRead;
 		BYTE readBuffer[8192];
-		CHANNEL_PDU_HEADER channelPduHeader;
+		CHANNEL_PDU_HEADER header;
 
 		FillMemory(writeBuffer, sizeof(writeBuffer), fillValue);
 		fillValue = (fillValue + 1) % 0xFF;
@@ -206,17 +207,16 @@ int main(int argc, char** argv)
 			}
 		}
 
-		ulBytesRead = 0;
+		offset = 0;
 
-		while (!ulBytesRead)
+		do
 		{
-			bSuccess = WTSVirtualChannelRead(hChannel, 100,
-				(PCHAR) &channelPduHeader, sizeof(CHANNEL_PDU_HEADER), &ulBytesRead);
+			ulBytesRead = 0;
+
+			bSuccess = WTSVirtualChannelRead(hChannel, 0,
+					(PCHAR) &header, sizeof(CHANNEL_PDU_HEADER), &ulBytesRead);
 
 			error = GetLastError();
-
-			if (error == ERROR_IO_INCOMPLETE)
-				continue;
 
 			if (!bSuccess && (error != ERROR_MORE_DATA))
 			{
@@ -226,26 +226,26 @@ int main(int argc, char** argv)
 
 			if (ulBytesRead && (ulBytesRead != sizeof(CHANNEL_PDU_HEADER)))
 			{
-				fprintf(stderr, "WTSVirtualChannelRead failed to read channel pdu header: %d\n");
+				fprintf(stderr, "WTSVirtualChannelRead failed to read channel pdu header: %d\n", ulBytesRead);
 				break;
 			}
+
+			ulBytesRead = 0;
+
+			bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) &readBuffer[offset],
+					CHANNEL_CHUNK_LENGTH, &ulBytesRead);
+
+			if (!bSuccess && (error != ERROR_MORE_DATA))
+			{
+				fprintf(stderr, "WTSVirtualChannelRead failed (GetLastError() = %d)\n", GetLastError());
+				break;
+			}
+
+			offset += ulBytesRead;
 		}
+		while (offset < header.length);
 
-		bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) readBuffer, channelPduHeader.length, &ulBytesRead);
-
-		if (!bSuccess)
-		{
-			fprintf(stderr, "WTSVirtualChannelRead failed (GetLastError() = %d)\n", GetLastError());
-			break;
-		}
-
-		if (ulBytesRead != channelPduHeader.length)
-		{
-			fprintf(stderr, "WTSVirtualChannelRead failed to read channel pdu payload\n");
-			break;
-		}
-
-		fprintf(stderr, "WTSVirtualChannelRead - %u bytes read\n", ulBytesRead);
+		fprintf(stderr, "WTSVirtualChannelRead - %u bytes read\n", offset);
 
 		Sleep(1000);
 	}

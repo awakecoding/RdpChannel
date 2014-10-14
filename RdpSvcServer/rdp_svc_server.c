@@ -176,7 +176,7 @@ int main(int argc, char** argv)
 	while (1)
 	{
 		BOOL bSuccess;
-		BYTE writeBuffer[1024];
+		BYTE writeBuffer[2048];
 		BYTE readBuffer[8192];
 		ULONG ulBytesWritten;
 		ULONG ulBytesRead;
