@@ -126,8 +126,6 @@ int main(int argc, char** argv)
 {
 	BOOL bSuccess;
 	BOOL blocking;
-	BOOL overlapped;
-	HANDLE hFile;
 	HANDLE hEvent;
 	HANDLE hServer;
 	HANDLE hChannel;
@@ -138,12 +136,6 @@ int main(int argc, char** argv)
 
 	hEvent = NULL;
 	blocking = FALSE;
-	overlapped = FALSE;
-
-#ifdef _WIN32
-	blocking = TRUE;
-	overlapped = TRUE;
-#endif
 
 	hServer = WTS_CURRENT_SERVER_HANDLE;
 
@@ -168,27 +160,6 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	if (overlapped)
-	{
-		if (!WTSVirtualChannelQuery(hChannel, WTSVirtualFileHandle, (PVOID*) &pBuffer, &bytesReturned) ||
-				(bytesReturned != sizeof(HANDLE)))
-		{
-			fprintf(stderr, "WTSVirtualChannelQuery failed (GetLastError() = %d)\n", GetLastError());
-			return 0;
-		}
-
-		bSuccess = DuplicateHandle(_GetCurrentProcess(), *((HANDLE*) pBuffer),
-			_GetCurrentProcess(), &hFile, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-		if (!bSuccess)
-		{
-			fprintf(stderr, "DuplicateHandle failed (GetLastError() = %d)\n", GetLastError());
-			return 0;
-		}
-
-		WTSFreeMemory(pBuffer);
-	}
-
 	if (!blocking)
 	{
 		if (!WTSVirtualChannelQuery(hChannel, WTSVirtualEventHandle, (PVOID*) &pBuffer, &bytesReturned) ||
@@ -205,14 +176,15 @@ int main(int argc, char** argv)
 	while (1)
 	{
 		BOOL bSuccess;
-		BYTE rgbBuffer[1024];
+		BYTE writeBuffer[1024];
+		BYTE readBuffer[8192];
 		ULONG ulBytesWritten;
 		ULONG ulBytesRead;
 
-		FillMemory(rgbBuffer, sizeof(rgbBuffer), fillValue);
+		FillMemory(writeBuffer, sizeof(writeBuffer), fillValue);
 		fillValue = (fillValue + 1) % 0xFF;
 
-		bSuccess = WTSVirtualChannelWrite(hChannel, (PCHAR) rgbBuffer, sizeof(rgbBuffer), &ulBytesWritten);
+		bSuccess = WTSVirtualChannelWrite(hChannel, (PCHAR) writeBuffer, sizeof(writeBuffer), &ulBytesWritten);
 
 		if (!bSuccess)
 		{
@@ -233,7 +205,7 @@ int main(int argc, char** argv)
 			}
 		}
 
-		bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) rgbBuffer, sizeof(rgbBuffer), &ulBytesRead);
+		bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) readBuffer, sizeof(readBuffer), &ulBytesRead);
 
 		if (!bSuccess)
 		{

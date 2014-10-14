@@ -34,76 +34,6 @@ const char* WM_WTS_STRINGS[] =
 	""
 };
 
-#define WTSAPI_CHANNEL_MAGIC	0x44484356
-
-struct _WTSAPI_CHANNEL
-{
-	UINT32 magic;
-	HANDLE hServer;
-	DWORD SessionId;
-	HANDLE hFile;
-	CHAR ChannelName[8];
-	BYTE unknown[12];
-};
-typedef struct _WTSAPI_CHANNEL WTSAPI_CHANNEL;
-
-BOOL WINAPI _WTSVirtualChannelWrite(HANDLE hChannel, LPCVOID lpBuffer, DWORD nNumberOfBytesToWrite, LPDWORD lpNumberOfBytesTransferred)
-{
-	OVERLAPPED overlapped;
-	WTSAPI_CHANNEL* pChannel = (WTSAPI_CHANNEL*) hChannel;
-
-	if (!pChannel || (pChannel->magic != WTSAPI_CHANNEL_MAGIC))
-	{
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return FALSE;
-	}
-
-	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-
-	if (WriteFile(pChannel->hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesTransferred, &overlapped))
-		return TRUE;
-
-	if (GetLastError() == ERROR_IO_PENDING)
-		return GetOverlappedResult(pChannel->hFile, &overlapped, lpNumberOfBytesTransferred, TRUE);
-
-	return FALSE;
-}
-
-BOOL WINAPI _WTSVirtualChannelRead(HANDLE hChannel, DWORD dwMilliseconds, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesTransferred)
-{
-	OVERLAPPED overlapped;
-	WTSAPI_CHANNEL* pChannel = (WTSAPI_CHANNEL*) hChannel;
-
-	if (!pChannel || (pChannel->magic != WTSAPI_CHANNEL_MAGIC))
-	{
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return FALSE;
-	}
-
-	ZeroMemory(&overlapped, sizeof(OVERLAPPED));
-
-	if (ReadFile(pChannel->hFile, lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesTransferred, &overlapped))
-		return TRUE;
-
-	if (GetLastError() != ERROR_IO_PENDING)
-		return FALSE;
-
-	if (!dwMilliseconds)
-	{
-		CancelIo(pChannel->hFile);
-		*lpNumberOfBytesTransferred = 0;
-		return TRUE;
-	}
-
-	if (WaitForSingleObject(pChannel->hFile, dwMilliseconds) != WAIT_TIMEOUT)
-		return GetOverlappedResult(pChannel->hFile, &overlapped, lpNumberOfBytesTransferred, FALSE);
-
-	CancelIo(pChannel->hFile);
-	SetLastError(ERROR_IO_INCOMPLETE);
-
-	return FALSE;
-}
-
 LRESULT CALLBACK RdpDvcWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	//printf("RdpDvcWindowProc: uMsg: 0x%04X\n", uMsg);
@@ -195,10 +125,7 @@ int rdp_dvc_server_register_session_notification()
 int main(int argc, char** argv)
 {
 	DWORD error;
-	BOOL bSuccess;
 	BOOL blocking;
-	BOOL overlapped;
-	HANDLE hFile;
 	HANDLE hEvent;
 	HANDLE hServer;
 	HANDLE hChannel;
@@ -209,12 +136,6 @@ int main(int argc, char** argv)
 
 	hEvent = NULL;
 	blocking = FALSE;
-	overlapped = FALSE;
-
-#ifdef _WIN32
-	blocking = TRUE;
-	overlapped = TRUE;
-#endif
 
 	hServer = WTS_CURRENT_SERVER_HANDLE;
 
@@ -237,27 +158,6 @@ int main(int argc, char** argv)
 	{
 		fprintf(stderr, "WTSVirtualChannelOpenEx failed (GetLastError() = %d)\n", GetLastError());
 		return 0;
-	}
-
-	if (overlapped)
-	{
-		if (!WTSVirtualChannelQuery(hChannel, WTSVirtualFileHandle, (PVOID*) &pBuffer, &bytesReturned) ||
-				(bytesReturned != sizeof(HANDLE)))
-		{
-			fprintf(stderr, "WTSVirtualChannelQuery failed (GetLastError() = %d)\n", GetLastError());
-			return 0;
-		}
-
-		bSuccess = DuplicateHandle(_GetCurrentProcess(), *((HANDLE*) pBuffer),
-			_GetCurrentProcess(), &hFile, 0, FALSE, DUPLICATE_SAME_ACCESS);
-
-		if (!bSuccess)
-		{
-			fprintf(stderr, "DuplicateHandle failed (GetLastError() = %d)\n", GetLastError());
-			return 0;
-		}
-
-		WTSFreeMemory(pBuffer);
 	}
 
 	if (!blocking)
@@ -285,7 +185,7 @@ int main(int argc, char** argv)
 		FillMemory(writeBuffer, sizeof(writeBuffer), fillValue);
 		fillValue = (fillValue + 1) % 0xFF;
 
-		bSuccess = _WTSVirtualChannelWrite(hChannel, (PCHAR) writeBuffer, sizeof(writeBuffer), &ulBytesWritten);
+		bSuccess = WTSVirtualChannelWrite(hChannel, (PCHAR) writeBuffer, sizeof(writeBuffer), &ulBytesWritten);
 
 		if (!bSuccess)
 		{
@@ -310,7 +210,7 @@ int main(int argc, char** argv)
 
 		while (!ulBytesRead)
 		{
-			bSuccess = _WTSVirtualChannelRead(hChannel, 100,
+			bSuccess = WTSVirtualChannelRead(hChannel, 100,
 				(PCHAR) &channelPduHeader, sizeof(CHANNEL_PDU_HEADER), &ulBytesRead);
 
 			error = GetLastError();
@@ -326,12 +226,12 @@ int main(int argc, char** argv)
 
 			if (ulBytesRead && (ulBytesRead != sizeof(CHANNEL_PDU_HEADER)))
 			{
-				fprintf(stderr, "WTSVirtualChannelRead failed to read channel pdu header\n");
+				fprintf(stderr, "WTSVirtualChannelRead failed to read channel pdu header: %d\n");
 				break;
 			}
 		}
 
-		bSuccess = _WTSVirtualChannelRead(hChannel, 0, (PCHAR) readBuffer, channelPduHeader.length, &ulBytesRead);
+		bSuccess = WTSVirtualChannelRead(hChannel, 0, (PCHAR) readBuffer, channelPduHeader.length, &ulBytesRead);
 
 		if (!bSuccess)
 		{
